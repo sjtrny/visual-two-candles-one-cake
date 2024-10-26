@@ -1,0 +1,7 @@
+dash==2.18.1
+dash-bootstrap-components==1.6.0
+gunicorn==23.0.0
+numpy==2.1.2
+pandas==2.2.3
+ruff==0.7.1
+scipy==1.14.1
