@@ -412,11 +412,11 @@ def update_graph(integration_region, dist1, dist2, dist3):
         data=[
             go.Scatter(
                 x=np.concatenate(
-                    ([dist3["range"][0] / 10], z_range, [dist3["range"][1] / 10])
+                    ([dist1["range"][0] / 10], x_range, [dist1["range"][1] / 10])
                 ),
-                y=np.concatenate(([0], z_dist.pdf(z_range), [0])),
-                line=dict(dash="dash"),
-                name="Candle 2",
+                y=np.concatenate(([0], x_dist.pdf(x_range), [0])),
+                line=dict(dash="dot"),
+                name="Knife",
             ),
             go.Scatter(
                 x=np.concatenate(
@@ -428,11 +428,11 @@ def update_graph(integration_region, dist1, dist2, dist3):
             ),
             go.Scatter(
                 x=np.concatenate(
-                    ([dist1["range"][0] / 10], x_range, [dist1["range"][1] / 10])
+                    ([dist3["range"][0] / 10], z_range, [dist3["range"][1] / 10])
                 ),
-                y=np.concatenate(([0], x_dist.pdf(x_range), [0])),
-                line=dict(dash="dot"),
-                name="Knife",
+                y=np.concatenate(([0], z_dist.pdf(z_range), [0])),
+                line=dict(dash="dash"),
+                name="Candle 2",
             ),
         ]
     )
@@ -442,6 +442,13 @@ def update_graph(integration_region, dist1, dist2, dist3):
         xaxis=dict(range=[-0.2, 1.2]),
         margin=dict(l=0, r=0, t=0, b=0),
         height=400,
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        )
     )
 
     return joint_plot, margin_plot
