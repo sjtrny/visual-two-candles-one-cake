@@ -42,7 +42,7 @@ app.layout = dbc.Container(
                             ]
                         )
                     ],
-                    lg=6,
+                    lg=6, className="mt-3",
                 ),
                 dbc.Col(
                     [
@@ -60,12 +60,12 @@ app.layout = dbc.Container(
                             ]
                         )
                     ],
-                    lg=6,
+                    lg=6, className="mt-3",
                 ),
             ],
-            className="mb-3 mt-3",
+
         ),
-        dbc.Row(html.Hr()),
+        dbc.Row(html.Hr(className='mt-3 mb-0')),
         dbc.Row(
             [
                 dbc.Col(
@@ -116,7 +116,7 @@ app.layout = dbc.Container(
                             ),
                         ]
                     ),
-                    lg=4,
+                    lg=4, className="mt-3",
                 ),
                 dbc.Col(
                     dbc.Card(
@@ -166,7 +166,7 @@ app.layout = dbc.Container(
                             ),
                         ]
                     ),
-                    lg=4,
+                    lg=4, className="mt-3",
                 ),
                 dbc.Col(
                     dbc.Card(
@@ -216,7 +216,7 @@ app.layout = dbc.Container(
                             ),
                         ]
                     ),
-                    lg=4,
+                    lg=4, className="mt-3",
                 ),
             ]
         ),
