@@ -5,7 +5,8 @@ from dash import ALL, Dash, Input, Output, callback, ctx, dcc, html
 from dash.exceptions import PreventUpdate
 from scipy.stats import beta, uniform
 
-num_points = 50000
+num_points_restricted = 50000
+num_points_full = 20000
 
 distribution_defaults = {
     "Uniform": {"class": uniform, "parameters": {}},
@@ -30,7 +31,15 @@ app.layout = dbc.Container(
                     [
                         dbc.Card(
                             [
-                                dbc.CardHeader("Joint Density"),
+                                dbc.CardHeader([
+                                    "Joint Density",
+                                    dcc.Checklist(
+                                        options=["Restrict to Integration Region"],
+                                        value=["Restrict to Integration Region"],
+                                        inline=True,
+                                        id="integration-region",
+                                    )
+                                ], className='d-flex justify-content-between'),
                                 dbc.CardBody(
                                     [
                                         dcc.Graph(
@@ -71,13 +80,13 @@ app.layout = dbc.Container(
                 dbc.Col(
                     dbc.Card(
                         [
-                            dbc.CardHeader("Knife"),
+                            dbc.CardHeader("Knife Settings"),
                             dbc.CardBody(
                                 [
                                     dbc.Form(
                                         [
                                             dbc.Label(
-                                                "Range",
+                                                "Support",
                                             ),
                                             dcc.RangeSlider(
                                                 min=0,
@@ -121,13 +130,13 @@ app.layout = dbc.Container(
                 dbc.Col(
                     dbc.Card(
                         [
-                            dbc.CardHeader("Candle 1"),
+                            dbc.CardHeader("Candle 1 Settings"),
                             dbc.CardBody(
                                 [
                                     dbc.Form(
                                         [
                                             dbc.Label(
-                                                "Range",
+                                                "Support",
                                             ),
                                             dcc.RangeSlider(
                                                 min=0,
@@ -171,13 +180,13 @@ app.layout = dbc.Container(
                 dbc.Col(
                     dbc.Card(
                         [
-                            dbc.CardHeader("Candle 2"),
+                            dbc.CardHeader("Candle 2 Settings"),
                             dbc.CardBody(
                                 [
                                     dbc.Form(
                                         [
                                             dbc.Label(
-                                                "Range",
+                                                "Support",
                                             ),
                                             dcc.RangeSlider(
                                                 min=0,
@@ -291,6 +300,7 @@ def update_distribution(distribution3_dropdown):
     Output("joint-plot", "figure"),
     Output("marginal-plot", "figure"),
     inputs=dict(
+        integration_region=Input("integration-region", "value"),
         dist1=dict(
             dropdown=Input("distribution1-dropdown", "value"),
             range=Input("distribution1-range", "value"),
@@ -308,7 +318,7 @@ def update_distribution(distribution3_dropdown):
         ),
     ),
 )
-def update_graph(dist1, dist2, dist3):
+def update_graph(integration_region, dist1, dist2, dist3):
     if (
         ctx.args_grouping.dist1["dropdown"]["triggered"] == True
         and len(ctx.args_grouping.dist1["params"]) == 0
@@ -316,13 +326,13 @@ def update_graph(dist1, dist2, dist3):
         raise PreventUpdate
     x_dist = distribution_defaults[dist1["dropdown"]]["class"](
         loc=dist1["range"][0] / 10,
-        scale=dist1["range"][1] / 10,
+        scale=dist1["range"][1] / 10 - dist1["range"][0] / 10,
         **{
             param["id"]["index"]: param["value"]
             for param in ctx.args_grouping.dist1["params"]
         },
     )
-    x = x_dist.rvs(size=num_points)
+
 
     if (
         ctx.args_grouping.dist2["dropdown"]["triggered"] == True
@@ -331,13 +341,13 @@ def update_graph(dist1, dist2, dist3):
         raise PreventUpdate
     y_dist = distribution_defaults[dist2["dropdown"]]["class"](
         loc=dist2["range"][0] / 10,
-        scale=dist2["range"][1] / 10,
+        scale=dist2["range"][1] / 10 - dist2["range"][0] / 10,
         **{
             param["id"]["index"]: param["value"]
             for param in ctx.args_grouping.dist2["params"]
         },
     )
-    y = y_dist.rvs(size=num_points)
+
 
     if (
         ctx.args_grouping.dist3["dropdown"]["triggered"] == True
@@ -346,19 +356,26 @@ def update_graph(dist1, dist2, dist3):
         raise PreventUpdate
     z_dist = distribution_defaults[dist3["dropdown"]]["class"](
         loc=dist3["range"][0] / 10,
-        scale=dist3["range"][1] / 10,
+        scale=dist3["range"][1] / 10 - dist3["range"][0] / 10,
         **{
             param["id"]["index"]: param["value"]
             for param in ctx.args_grouping.dist3["params"]
         },
     )
-    z = z_dist.rvs(size=num_points)
 
-    condition = ((x > y) & (x < z)) | ((x < y) & (x > z))
+    if integration_region:
+        x = x_dist.rvs(size=num_points_restricted)
+        y = y_dist.rvs(size=num_points_restricted)
+        z = z_dist.rvs(size=num_points_restricted)
+        condition = ((x > y) & (x < z)) | ((x < y) & (x > z))
 
-    x_region = x[condition]
-    y_region = y[condition]
-    z_region = z[condition]
+        x_region = x[condition]
+        y_region = y[condition]
+        z_region = z[condition]
+    else:
+        x_region = x_dist.rvs(size=num_points_full)
+        y_region = y_dist.rvs(size=num_points_full)
+        z_region = z_dist.rvs(size=num_points_full)
 
     joint_plot = go.Figure(
         data=[
@@ -387,23 +404,25 @@ def update_graph(dist1, dist2, dist3):
         height=400,
     )
 
-    x_range = np.linspace(0, 1, num=100, endpoint=True)
+    x_range = np.linspace(dist1["range"][0] / 10, dist1["range"][1] / 10, num=100, endpoint=True)
+    y_range = np.linspace(dist2["range"][0] / 10, dist2["range"][1] / 10, num=100, endpoint=True)
+    z_range = np.linspace(dist3["range"][0] / 10, dist3["range"][1] / 10, num=100, endpoint=True)
 
     margin_plot = go.Figure(
         data=[
             go.Scatter(
                 x=np.concatenate(
-                    ([dist3["range"][0] / 10], x_range, [dist3["range"][1] / 10])
+                    ([dist3["range"][0] / 10], z_range, [dist3["range"][1] / 10])
                 ),
-                y=np.concatenate(([0], z_dist.pdf(x_range), [0])),
+                y=np.concatenate(([0], z_dist.pdf(z_range), [0])),
                 line=dict(dash="dash"),
                 name="Candle 2",
             ),
             go.Scatter(
                 x=np.concatenate(
-                    ([dist2["range"][0] / 10], x_range, [dist2["range"][1] / 10])
+                    ([dist2["range"][0] / 10], y_range, [dist2["range"][1] / 10])
                 ),
-                y=np.concatenate(([0], y_dist.pdf(x_range), [0])),
+                y=np.concatenate(([0], y_dist.pdf(y_range), [0])),
                 line=dict(dash="longdash"),
                 name="Candle 1",
             ),
