@@ -2,6 +2,7 @@ dash==2.18.1
 dash-bootstrap-components==1.6.0
 gunicorn==23.0.0
 numba==0.60.0
+numba-scipy==0.4.0
 numpy>=1.22
 pandas==2.2.3
 ruff==0.7.1
