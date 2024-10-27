@@ -4,10 +4,12 @@ import plotly.graph_objects as go
 from dash import ALL, Dash, Input, Output, callback, ctx, dcc, html
 from dash.exceptions import PreventUpdate
 from scipy.integrate import nquad
-from scipy.stats import beta, uniform
+
+from distributions import beta, uniform
 
 num_points_mc = 1000000
 num_points_restricted = 20000
+
 
 distribution_defaults = {
     "Uniform": {"class": uniform, "parameters": {}},
@@ -524,28 +526,28 @@ def update_graph(integration_region, dist1, dist2, dist3):
     )
 
     result_left, error_left = nquad(
-        lambda z, y, x: x_dist.pdf(x) * y_dist.pdf(y) * z_dist.pdf(z),
+        lambda z, y, x: x_dist.fast_pdf(x) * y_dist.fast_pdf(y) * z_dist.fast_pdf(z),
         ranges=[
             lambda c1, k: (max(k, z_dist_range[0]), z_dist_range[1]),  # c2 limits
             lambda k: (y_dist_range[0], min(k, y_dist_range[1])),  # c1 limits
             x_dist_range,  # k limits
         ],
-        opts=dict(limit=2),
+        opts=dict(epsabs=1e-2, epsrel=1e-2),
     )
 
     result_right, error_right = nquad(
-        lambda z, y, x: x_dist.pdf(x) * y_dist.pdf(y) * z_dist.pdf(z),
+        lambda z, y, x: x_dist.fast_pdf(x) * y_dist.fast_pdf(y) * z_dist.fast_pdf(z),
         ranges=[
             lambda c1, k: (z_dist_range[0], min(k, z_dist_range[1])),  # c2 limits
             lambda k: (max(k, y_dist_range[0]), y_dist_range[1]),  # c1 limits
             x_dist_range,  # k limits
         ],
-        opts=dict(limit=2),
+        opts=dict(epsabs=1e-2, epsrel=1e-2),
     )
 
     integral_estimate = result_left + result_right
 
-    return joint_plot, margin_plot, f"{integral_estimate:0.4f}", f"{mc_estimate:0.4f}"
+    return joint_plot, margin_plot, f"{integral_estimate:0.8f}", f"{mc_estimate:0.8f}"
 
 
 if __name__ == "__main__":
