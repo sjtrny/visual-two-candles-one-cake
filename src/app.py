@@ -134,7 +134,7 @@ app.layout = dbc.Container(
                                     [
                                         dcc.Graph(
                                             id="marginal-plot",
-                                            config={"displayModeBar": False},
+                                            config={"displayModeBar": False, "staticPlot": True},
                                         )
                                     ]
                                 ),
