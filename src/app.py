@@ -4,6 +4,7 @@ import plotly.graph_objects as go
 from dash import ALL, Dash, Input, Output, callback, ctx, dcc, html
 from dash.exceptions import PreventUpdate
 from scipy.integrate import nquad
+from flask_caching import Cache
 
 from distributions import beta, uniform
 
@@ -25,6 +26,12 @@ distribution_defaults = {
 app = Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.title = "Two Candles, One Cake - Visualised"
 server = app.server
+
+cache = Cache(server, config={
+    'CACHE_TYPE': 'filesystem',
+    'CACHE_DIR': 'cache-directory',
+    'CACHE_DEFAULT_TIMEOUT': 0
+})
 
 app.layout = dbc.Container(
     [
@@ -388,22 +395,23 @@ def update_distribution(distribution3_dropdown):
         ),
     ),
 )
+@cache.memoize()
 def update_graph(integration_region, dist1, dist2, dist3):
     if (
         ctx.args_grouping.dist1["dropdown"]["triggered"] == True
-        and len(ctx.args_grouping.dist1["params"]) == 0
+        and {param["id"]["index"] for param in ctx.args_grouping.dist1["params"]} != set(distribution_defaults[dist1["dropdown"]]["parameters"].keys())
     ):
         raise PreventUpdate
 
     if (
         ctx.args_grouping.dist2["dropdown"]["triggered"] == True
-        and len(ctx.args_grouping.dist2["params"]) == 0
+        and {param["id"]["index"] for param in ctx.args_grouping.dist2["params"]} != set(distribution_defaults[dist2["dropdown"]]["parameters"].keys())
     ):
         raise PreventUpdate
 
     if (
         ctx.args_grouping.dist3["dropdown"]["triggered"] == True
-        and len(ctx.args_grouping.dist3["params"]) == 0
+        and {param["id"]["index"] for param in ctx.args_grouping.dist3["params"]} != set(distribution_defaults[dist3["dropdown"]]["parameters"].keys())
     ):
         raise PreventUpdate
 
