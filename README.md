@@ -1,6 +1,6 @@
 # Visual "Two Candles, One Cake"
 
-View here https://visual-candles-cake.apps.sjtrny.com
+View here https://visual-candles-cake.sjtrny.com
 
 # About
 
